@@ -7,9 +7,9 @@ public class ConnectionPool {
 
   private List<PooledConnection> connections = new ArrayList<PooledConnection>();
 
-  public ConnectionPool(JDBConnectionFactory factory, int poolSize) {
+  public ConnectionPool(JDBConnectionFactory factory, int poolSize, long leaseTimeInMillis) {
 	  for(int i=0; i < poolSize; i++) {
-		  connections.add(new PooledConnection(factory.create()));
+		  connections.add(new PooledConnection(factory.create(), leaseTimeInMillis));
 	  }
   }
 }
