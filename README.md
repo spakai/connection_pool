@@ -12,3 +12,10 @@ This will create the following directories
 main/java/com/spakai
 test/java/com/spakai
 ```
+
+#Dependencies
+
+- JUnit
+- Hamcrest since i am using assertThat instead of classic assertions
+- Mockito to mock the db connection
+
