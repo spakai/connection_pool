@@ -21,7 +21,11 @@ public class PooledConnectionTest {
 	@Test
 	public void LeaseTimeExpired() throws java.lang.InterruptedException{
 		PooledConnection pooledConn = new PooledConnection(mockConnection, 1000);
-		pooledConn.getConnection();
+		try {
+			pooledConn.getConnection();
+		} catch (PooledConnectionException e) {
+			fail();
+		}
 		Thread.sleep(2000);
 
 		assertThat(pooledConn.isExpired(), is(true));
@@ -30,7 +34,11 @@ public class PooledConnectionTest {
 	@Test
 	public void LeaseTimeStillValid() throws java.lang.InterruptedException{
 		PooledConnection pooledConn = new PooledConnection(mockConnection, 5000);
-		pooledConn.getConnection();
+		try {
+			pooledConn.getConnection();
+		} catch (PooledConnectionException e) {
+			fail();
+		}
 		Thread.sleep(2000);
 
 		assertThat(pooledConn.isExpired(), is(false));
