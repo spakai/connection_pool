@@ -7,9 +7,10 @@ import java.sql.SQLException;
 // I need a class to keep track of how long the client has borrowed  JDBConnection object,
 // which has the actual sql jdbc connection object . I chose composition over inheritance
 // by having the PooledConnection class.
+
 public class PooledConnection {
 
-	JDBConnection connection;
+    JDBConnection connection;
 
 	private boolean inUse = false;
 
@@ -23,17 +24,21 @@ public class PooledConnection {
 	}
 
 	public boolean isExpired() {
-		Instant current = Instant.now();
-		Duration timeElapsed = Duration.between(timeOfLease, current);
-		if(timeElapsed.toMillis() > maxLeaseTimeInMillis) {
-			return true;
-		}
+        Duration timeElapsed = Duration.between(timeOfLease, Instant.now());
+        if(timeElapsed.toMillis() > maxLeaseTimeInMillis) {
+            return true;
+        }
 
-		return false;
+        return false;
 	}
 
-	public boolean isActive () throws SQLException {
-		return connection.getConnection().isValid(1);
+	public boolean isActive () {
+        try {
+            connection.getConnection().isValid(1);
+            return true;
+        } catch (SQLException e) {
+            return false;
+        }
 	}
 
 	public void reset() {
@@ -41,13 +46,13 @@ public class PooledConnection {
 		maxLeaseTimeInMillis = 0;
 	}
 
-	public JDBConnection getConnection() throws PooledConnectionException {
-		if(inUse) {
-			throw new PooledConnectionException("Connection already in use");
-		}
+    public JDBConnection getConnection() throws PooledConnectionException {
+        if(inUse) {
+            throw new PooledConnectionException("Connection already in use");
+        }
 
-		inUse = true;
-		timeOfLease = Instant.now();
-		return connection;
-	}
+        inUse = true;
+        timeOfLease = Instant.now();
+        return connection;
+    }
 }
