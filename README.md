@@ -1,6 +1,6 @@
 #Motivation
 
-To Learn the basics of maven, junit  and Java 8 by implementing active911's C++ connection pool in Java.
+To learn the basics of maven/gradle, junit  and Java 8 by implementing active911's C++ connection pool in Java.
 
 #Setup
 Create dev environment using Maven by running the following
@@ -16,6 +16,8 @@ test/java/com/spakai
 #Dependencies
 
 - JUnit
-- Hamcrest since i am using assertThat instead of classic assertions
-- Mockito to mock the db connection
+- Hamcrest since I am using assertThat instead of classic assertions
+- Mockito to mock JDBConnectionFactory, JDBConnection and Connection classes
 
+#Code coverage
+Code coverage is measured using Jacoco for gradle and Cobertura for maven.
