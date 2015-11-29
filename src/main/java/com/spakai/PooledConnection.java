@@ -34,8 +34,7 @@ public class PooledConnection {
 
 	public boolean isActive () {
         try {
-            connection.getConnection().isValid(1);
-            return true;
+            return connection.getConnection().isValid(1);
         } catch (SQLException e) {
             return false;
         }

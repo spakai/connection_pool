@@ -12,9 +12,4 @@ public class ConnectionPool {
             connections.add(new PooledConnection(factory.create(), leaseTimeInMillis));
         }
     }
-
-    public JDBConnection borrow() {
-        return null;    
-    }
-
 }
