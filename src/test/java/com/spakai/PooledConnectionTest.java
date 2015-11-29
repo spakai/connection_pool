@@ -72,4 +72,16 @@ public class PooledConnectionTest {
 
         assertThat(pooledConn.isActive(), is(true));
     }
+
+    @Test
+    public void ConnectionThrowsException() throws SQLException {
+        when(mockJDBConnection.getConnection()).thenReturn(mockConnection);
+        when(mockConnection.isValid(anyInt())).thenThrow(new SQLException());
+ 
+        PooledConnection pooledConn = new PooledConnection(mockJDBConnection, 5000);
+
+        assertThat(pooledConn.isActive(), is(false));
+    }
+
+
 }
