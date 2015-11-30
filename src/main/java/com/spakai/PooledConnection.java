@@ -12,38 +12,38 @@ public class PooledConnection {
 
     JDBConnection connection;
 
-	private boolean inUse = false;
+    private boolean inUse = false;
 
-	private long maxLeaseTimeInMillis=0;
+    private long maxLeaseTimeInMillis=0;
 
-	private Instant timeOfLease;
+    private Instant timeOfLease;
 
-	public PooledConnection(JDBConnection connection, long maxLeaseTimeInMillis) {
-		this.connection = connection;
-		this.maxLeaseTimeInMillis = maxLeaseTimeInMillis;
-	}
+    public PooledConnection(JDBConnection connection, long maxLeaseTimeInMillis) {
+        this.connection = connection;
+        this.maxLeaseTimeInMillis = maxLeaseTimeInMillis;
+    }
 
-	public boolean isExpired() {
+    public boolean isExpired() {
         Duration timeElapsed = Duration.between(timeOfLease, Instant.now());
         if(timeElapsed.toMillis() > maxLeaseTimeInMillis) {
             return true;
         }
 
         return false;
-	}
+    }
 
-	public boolean isActive () {
+    public boolean isActive () {
         try {
             return connection.getConnection().isValid(1);
         } catch (SQLException e) {
             return false;
         }
-	}
+    }
 
-	public void reset() {
-		inUse = false;
-		maxLeaseTimeInMillis = 0;
-	}
+    public void reset() {
+        inUse = false;
+        maxLeaseTimeInMillis = 0;
+    }
 
     public JDBConnection getConnection() throws PooledConnectionException {
         if(inUse) {
