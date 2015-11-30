@@ -12,7 +12,7 @@ import org.junit.Test;
 import org.junit.Before;
 
 public class ConnectionPoolTest {
-	@Mock JDBConnection mockConnection;
+	@Mock JDBConnection mockJDBConnection;
 	@Mock JDBConnectionFactory mockConnectionFactory;
 
 	@Before
@@ -22,7 +22,7 @@ public class ConnectionPoolTest {
 
 	@Test
 	public void FactoryCreatesConnectionsOnCreation() {
-		when(mockConnectionFactory.create()).thenReturn(mockConnection);
+		when(mockConnectionFactory.create()).thenReturn(mockJDBConnection);
 		long timeOfLease = 1000;
 		int poolSize     = 5;
 
