@@ -12,13 +12,23 @@ public class PooledConnection {
 
     JDBConnection connection;
 
+    private int id;
+    
     private boolean inUse = false;
 
-    private long maxLeaseTimeInMillis=0;
-
+    private long maxLeaseTimeInMillis=Long.MAX_VALUE;
+   
     private Instant timeOfLease;
-
+    
     public PooledConnection(JDBConnection connection, long maxLeaseTimeInMillis) {
+    	this.setId(0);
+        this.connection = connection;
+        this.maxLeaseTimeInMillis = maxLeaseTimeInMillis;
+    }
+    
+
+    public PooledConnection(int id, JDBConnection connection, long maxLeaseTimeInMillis) {
+    	this.setId(id);
         this.connection = connection;
         this.maxLeaseTimeInMillis = maxLeaseTimeInMillis;
     }
@@ -42,16 +52,30 @@ public class PooledConnection {
 
     public void reset() {
         inUse = false;
-        maxLeaseTimeInMillis = 0;
+        maxLeaseTimeInMillis = Long.MAX_VALUE;
     }
-
+    
+    public void set() {
+    	inUse = true;
+    	timeOfLease = Instant.now();
+    }
+    
     public JDBConnection getConnection() throws PooledConnectionException {
-        if(inUse) {
-            throw new PooledConnectionException("Connection already in use");
-        }
-
-        inUse = true;
-        timeOfLease = Instant.now();
         return connection;
     }
+    
+    public void closeConnection() {
+    	if(connection != null) {
+    		connection.close();
+    	}
+    }
+
+	public int getId() {
+		return id;
+	}
+
+
+	public void setId(int id) {
+		this.id = id;
+	}
 }
