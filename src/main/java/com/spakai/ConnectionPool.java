@@ -10,11 +10,11 @@ import java.util.TreeMap;
 public class ConnectionPool {
 
   private Deque<JdbConnection> pooled = new ArrayDeque<>();
-    
+
   private Map<Instant,JdbConnection> borrowed = new TreeMap<>();
-    
+
   private JdbConnectionFactory factory;
-    
+
   private long leaseTimeInMillis = Long.MAX_VALUE;
 
   /**
@@ -23,25 +23,25 @@ public class ConnectionPool {
    * @param poolSize Number of JDBConnection implementations to create.
    * @param leaseTimeInMillis How long the client can use the connection before it expires.
    */
-  
+
   public ConnectionPool(JdbConnectionFactory factory, int poolSize, long leaseTimeInMillis) {
     for (int i = 0; i < poolSize; i++) {
       pooled.addLast(factory.create());
     }
-        
+
     this.factory = factory;
     this.leaseTimeInMillis = leaseTimeInMillis;
   }
-  
+
   /**
-   * Get a JDBConnection object either by the ones available in the queue or recycling 
-   * the first expired connection. When a connection is given to a client, it is tagged with 
+   * Get a JDBConnection object either by the ones available in the queue or recycling
+   * the first expired connection. When a connection is given to a client, it is tagged with
    * the current time. This enables us to check the duration it has been out and recycle if
    * required.
    * @return JDBConnection This contains the actual jdbc connection object to db.
    * @throws ConnectionPoolException Throws if no available connections
    */
-  
+
   public JdbConnection borrow() throws ConnectionPoolException {
     if (pooled.size() > 0) {
       //take from the front
@@ -54,7 +54,7 @@ public class ConnectionPool {
         JdbConnection jdbConnection = entry.getValue();
         Duration timeElapsed = Duration.between(leaseTime, Instant.now());
         if (timeElapsed.toMillis() > leaseTimeInMillis) {
-          //expired, let's close it and remove it from existence
+          //expired, let's close it and remove it from the map
           jdbConnection.close();
           borrowed.remove(leaseTime);
 
@@ -67,14 +67,14 @@ public class ConnectionPool {
     }
     throw new ConnectionPoolException("No connections available");
   }
-  
-  
+
+
   /**
-   * Return a JDBConnection object back to the pool. 
-   * 
+   * Return a JDBConnection object back to the pool.
+   *
    * @param jdbConnection The object retrieved from the pool via borrow()
    */
-    
+
   public void forfeit(JdbConnection jdbConnection) {
     borrowed.values().remove(jdbConnection);
     pooled.addLast(jdbConnection);
