@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -11,11 +12,11 @@ public class ConnectionPool {
 
   private Deque<JdbConnection> pooled = new ArrayDeque<>();
 
-  private Map<Instant,JdbConnection> borrowed = new TreeMap<>();
+  private Map<JdbConnection,Instant> borrowed = new HashMap<>();
 
   private JdbConnectionFactory factory;
 
-  private long leaseTimeInMillis = Long.MAX_VALUE;
+  private long leaseTimeInMillis;
 
   /**
    * Creates connection objects and pushes it into queue.
@@ -34,49 +35,57 @@ public class ConnectionPool {
   }
 
   /**
-   * Get a JDBConnection object either by the ones available in the queue or recycling
+   * Get a JdbConnection object either by the ones available in the queue or replace
    * the first expired connection. When a connection is given to a client, it is tagged with
-   * the current time. This enables us to check the duration it has been out and recycle if
+   * the current time. This enables us to check the duration it has been out and replace if
    * required.
    * @return JDBConnection This contains the actual jdbc connection object to db.
    * @throws ConnectionPoolException Throws if no available connections
    */
 
-  public JdbConnection borrow() throws ConnectionPoolException {
+  public synchronized JdbConnection borrow() throws ConnectionPoolException {
     if (pooled.size() > 0) {
-      //take from the front
-      borrowed.put(Instant.now(), pooled.peek());
+      borrowed.put(pooled.peek(),Instant.now());
       return pooled.removeFirst();
     } else {
-      //check for the first expired connection , close it and create a replacement
-      for (Map.Entry<Instant,JdbConnection> entry : borrowed.entrySet()) {
-        Instant leaseTime = entry.getKey();
-        JdbConnection jdbConnection = entry.getValue();
-        Duration timeElapsed = Duration.between(leaseTime, Instant.now());
-        if (timeElapsed.toMillis() > leaseTimeInMillis) {
-          //expired, let's close it and remove it from the map
-          jdbConnection.close();
-          borrowed.remove(leaseTime);
+      return createReplacementIfExpiredConnFound();
+    }
+  }
 
-          //create a new one, mark it as borrowed and give it to the client
-          JdbConnection newJdbConnection = factory.create();
-          borrowed.put(Instant.now(), newJdbConnection);
-          return newJdbConnection;
-        }
+  /**
+   * Return a JdbConnection object back to the pool.
+   *
+   * @param jdbConnection The object retrieved from the pool via borrow()
+   * @throws ConnectionPoolException Throws if connection has already been returned or forced to expire
+   */
+
+  public synchronized void forfeit(JdbConnection jdbConnection) throws ConnectionPoolException {
+    if (borrowed.containsKey(jdbConnection)) {
+      borrowed.remove(jdbConnection);
+      pooled.addLast(jdbConnection);
+    } else {
+      throw new ConnectionPoolException("Connection already returned or forced to expire");
+    }
+  }
+
+  private JdbConnection createReplacementIfExpiredConnFound() throws ConnectionPoolException {
+    //check for the first expired connection , close it and create a replacement
+    //throw exception if replacement is not possible
+    for (Map.Entry<JdbConnection,Instant> entry : borrowed.entrySet()) {
+      Instant leaseTime = entry.getValue();
+      JdbConnection jdbConnection = entry.getKey();
+      Duration timeElapsed = Duration.between(leaseTime, Instant.now());
+      if (timeElapsed.toMillis() > leaseTimeInMillis) {
+        //expired, let's close it and remove it from the map
+        jdbConnection.close();
+        borrowed.remove(jdbConnection);
+
+        //create a new one, mark it as borrowed and give it to the client
+        JdbConnection newJdbConnection = factory.create();
+        borrowed.put(newJdbConnection,Instant.now());
+        return newJdbConnection;
       }
     }
     throw new ConnectionPoolException("No connections available");
-  }
-
-
-  /**
-   * Return a JDBConnection object back to the pool.
-   *
-   * @param jdbConnection The object retrieved from the pool via borrow()
-   */
-
-  public void forfeit(JdbConnection jdbConnection) {
-    borrowed.values().remove(jdbConnection);
-    pooled.addLast(jdbConnection);
   }
 }
