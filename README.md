@@ -41,3 +41,17 @@ maven cobertura:cobertura
 
 #Code style
 Code style check is done by using checkStyle plugin
+
+#Code design
+
+There are 3 classes
+
+- JDBConnectionFactory 
+Creates JDBConnections 
+
+- JDBConnection
+Contains the connection object 
+
+- ConnectionPool
+Uses JDBConnectionFactory to create the required number of JDBConnection objects and stores them in a deque.
+A client will call borrow() in order to get a connection, and forfeit when returning.
