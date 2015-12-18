@@ -7,8 +7,6 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 public class ConnectionPool {
 
@@ -75,7 +73,7 @@ public class ConnectionPool {
     //throw exception if replacement is not possible
 
     Entry<JdbConnection, Instant> entry =
-    borrowed.entrySet().parallelStream()
+    borrowed.entrySet().stream()
                        .filter(e -> hasExpired(e.getValue()))
                        .findFirst()
                        .orElseThrow(() -> new ConnectionPoolException("No connections available"));
