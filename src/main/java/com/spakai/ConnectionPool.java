@@ -6,7 +6,9 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 public class ConnectionPool {
 
@@ -71,21 +73,21 @@ public class ConnectionPool {
   private JdbConnection createReplacementIfExpiredConnFound() throws ConnectionPoolException {
     //check for the first expired connection , close it and create a replacement
     //throw exception if replacement is not possible
-    for (Map.Entry<JdbConnection,Instant> entry : borrowed.entrySet()) {
-      Instant leaseTime = entry.getValue();
-      JdbConnection jdbConnection = entry.getKey();
-      Duration timeElapsed = Duration.between(leaseTime, Instant.now());
-      if (timeElapsed.toMillis() > leaseTimeInMillis) {
-        //expired, let's close it and remove it from the map
-        jdbConnection.close();
-        borrowed.remove(jdbConnection);
 
-        //create a new one, mark it as borrowed and give it to the client
-        JdbConnection newJdbConnection = factory.create();
-        borrowed.put(newJdbConnection,Instant.now());
-        return newJdbConnection;
-      }
-    }
-    throw new ConnectionPoolException("No connections available");
+    Entry<JdbConnection, Instant> entry =
+    borrowed.entrySet().parallelStream()
+                       .filter(e -> hasExpired(e.getValue()))
+                       .findFirst()
+                       .orElseThrow(() -> new ConnectionPoolException("No connections available"));
+	
+    entry.getKey().close();
+    borrowed.remove(entry.getKey());
+    JdbConnection newJdbConnection = factory.create();
+    borrowed.put(newJdbConnection,Instant.now());
+    return newJdbConnection;
+  }
+  
+  private boolean hasExpired(Instant instant) {
+    return (Duration.between(instant, Instant.now()).toMillis() > leaseTimeInMillis);
   }
 }
