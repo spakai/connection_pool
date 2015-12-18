@@ -68,6 +68,20 @@ public class ConnectionPoolTest {
     then(mockJdbConnection0).should(times(1)).close();
     then(mockConnectionFactory).should(times(poolSize + 1)).create();
   }
+  
+  @Test
+  public void borrowingReturnsTheOldestConnection() 
+    throws InterruptedException, ConnectionPoolException {
+	  given(mockConnectionFactory.create())
+	    .willReturn(mockJdbConnection0)
+	    .willReturn(mockJdbConnection1)
+	    .willReturn(mockJdbConnection2)
+	    .willReturn(mockJdbConnection3)
+	    .willReturn(mockJdbConnection4);
+    ConnectionPool pool = new ConnectionPool(mockConnectionFactory, poolSize, longLeaseLife);
+
+    assertThat(pool.borrow(), is(mockJdbConnection0));
+  }
 
   @Test
   public void borrowingNotPossibleAsAllConnectionsAreInUse() throws ConnectionPoolException {
