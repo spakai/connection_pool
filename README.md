@@ -47,31 +47,33 @@ Code style check is done by using checkStyle plugin
 There are 3 interfaces/classes. I will add the implementation classes for the interfaces soon.
 
 
-- JDBConnectionFactory 
+- JDBConnectionFactory
 Requires an implementation class that creates JDBConnections objects
-
+```
 public class MySQLJDBConnectionFactory implements JDBConnectionFactory {
   public JDBConnection create() {
     return new MySQLJDBConnection(......
   }
 }
+```
 
 - JDBConnection
-Contains the connection object 
-
+Contains the connection object
+```
 public class MySQLJDBConnection implements JDBConnection {
 
   private java.sql.Connection connection;
-  
+
   public MySQLJDBConnection() {
     connection = DriverManager.getConnection(username,password,host,port,"MySQL");
   }
-  
+
   Connection getConnection() {
     return connection;
   }
-  
+
  }
+```
 
 - ConnectionPool
 Uses JDBConnectionFactory implementations to create the required number of JDBConnection implementation objects and stores them in a deque.
