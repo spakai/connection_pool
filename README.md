@@ -44,8 +44,9 @@ Code style check is done by using checkStyle plugin
 
 #Code design
 
-There are 3 interfaces/classes. I will add the implementation classes for the interfaces soon.
+This project uses Factory Design Pattern. This allows ConnectionPool class to be generic. The type of database supported is determined by the type of Factory object that is injected during runtime. The specific factory creates required specific connection class that contains the actual connection to the database. So for example , if you need a MySQL connection pool, pass in a MySQLJDBConnectionFactory object.
 
+There are 3 interfaces/classes.
 
 - JDBConnectionFactory
 Requires an implementation class that creates JDBConnections objects
