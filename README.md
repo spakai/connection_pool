@@ -1,7 +1,7 @@
 #Motivation
 
 To learn the basics of Maven or Gradle, jUnit, Mockito and Java 8 by implementing active911's C++ connection pool in Java.
-To understand implementation of Strategy and Factory Design Pattern.
+To understand an interesting implementation of the Strategy and Factory Design Pattern.
 
 #Setup
 Create development environment using Maven by running the following
