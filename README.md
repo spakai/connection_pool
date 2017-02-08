@@ -78,4 +78,22 @@ public class MySQLJDBConnection implements JDBConnection {
 
 - ConnectionPool
 Uses JDBConnectionFactory implementations to create the required number of JDBConnection implementation objects and stores them in a deque.
+
+```
+public class ConnectionPool {
+
+  private Deque<JdbConnection> pooled = new ArrayDeque<>();
+
+  private JdbConnectionFactory factory;
+
+  public ConnectionPool(JdbConnectionFactory factory, int poolSize) {
+    for (int i = 0; i < poolSize; i++) {
+      pooled.addLast(factory.create());
+    }
+
+  }
+```
 A client will call borrow() in order to get a connection, and forfeit when returning.
+
+
+
