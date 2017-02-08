@@ -1,6 +1,6 @@
 #Motivation
 
-To learn the basics of Maven, Gradle, jUnit, Mockito and Java 8 by implementing active911's C++ connection pool in Java.
+To learn the basics of Maven or Gradle, jUnit, Mockito and Java 8 by implementing active911's C++ connection pool in Java.
 
 #Setup
 Create development environment using Maven by running the following
@@ -44,7 +44,13 @@ Code style check is done by using checkStyle plugin
 
 #Code design
 
-This project uses Factory Design Pattern. This allows ConnectionPool class to be generic. The type of database supported is determined by the type of Factory object that is injected during runtime. The specific factory creates required specific connection class that contains the actual connection to the database. So for example , if you need a MySQL connection pool, pass in a MySQLJDBConnectionFactory object.
+This project uses Strategy and Factory Design Pattern. This allows ConnectionPool class to be generic. The type of database supported is determined by the type of Factory object that is injected during runtime. The specific factory creates required specific connection class that contains the actual connection to the database. So for example , if you need a MySQL connection pool, pass in a MySQLJDBConnectionFactory object.
+
+The design does satisfy the 3 common rules of design
+
+1. Program to an interface
+2. Favour composition over inheritance
+3. Identify the aspects of your application that vary and separate them from what stays the same.
 
 There are 3 interfaces/classes.
 
