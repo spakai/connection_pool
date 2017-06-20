@@ -2,14 +2,14 @@ package com.spakai;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ConnectionPool {
 
-  private ConcurrentLinkedQueue<JdbConnection> pooled = new ConcurrentLinkedQueue<>();
+  private ConcurrentLinkedQueue<JdbConnection> pool = new ConcurrentLinkedQueue<>();
 
   private Map<JdbConnection,Instant> borrowed = new ConcurrentHashMap<>();
 
@@ -26,7 +26,7 @@ public class ConnectionPool {
 
   public ConnectionPool(JdbConnectionFactory factory, int poolSize, long leaseTimeInMillis) {
     for (int i = 0; i < poolSize; i++) {
-      pooled.add(factory.create());
+      pool.add(factory.create());
     }
 
     this.factory = factory;
@@ -43,9 +43,9 @@ public class ConnectionPool {
    */
 
   public JdbConnection borrow() throws ConnectionPoolException {
-    if (pooled.size() > 0) {
-      borrowed.put(pooled.peek(),Instant.now());
-      return pooled.remove();
+    if (pool.size() > 0) {
+      borrowed.put(pool.peek(),Instant.now());
+      return pool.remove();
     } else {
       return createReplacementIfExpiredConnFound();
     }
@@ -55,13 +55,14 @@ public class ConnectionPool {
    * Return a JdbConnection object back to the pool.
    *
    * @param jdbConnection The object retrieved from the pool via borrow()
-   * @throws ConnectionPoolException Throws if connection has already been returned or forced to expire
+   * @throws ConnectionPoolException Throws if connection has already been 
+   *        returned or forced to expire
    */
 
   public void forfeit(JdbConnection jdbConnection) throws ConnectionPoolException {
     if (borrowed.containsKey(jdbConnection)) {
       borrowed.remove(jdbConnection);
-      pooled.add(jdbConnection);
+      pool.add(jdbConnection);
     } else {
       throw new ConnectionPoolException("Connection already returned or forced to expire");
     }
@@ -72,11 +73,11 @@ public class ConnectionPool {
     //throw exception if replacement is not possible
 
     Entry<JdbConnection, Instant> entry =
-    borrowed.entrySet().stream()
-                       .filter(e -> hasExpired(e.getValue()))
-                       .findFirst()
-                       .orElseThrow(() -> new ConnectionPoolException("No connections available"));
-	
+        borrowed.entrySet().stream()
+                        .filter(e -> hasExpired(e.getValue()))
+                        .findFirst()
+                        .orElseThrow(() -> new ConnectionPoolException("No connections available"));
+    
     entry.getKey().close();
     borrowed.remove(entry.getKey());
     JdbConnection newJdbConnection = factory.create();
