@@ -2,17 +2,16 @@ package com.spakai;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 public class ConnectionPool {
 
-  private Deque<JdbConnection> pooled = new ArrayDeque<>();
+  private ConcurrentLinkedQueue<JdbConnection> pooled = new ConcurrentLinkedQueue<>();
 
-  private Map<JdbConnection,Instant> borrowed = new HashMap<>();
+  private Map<JdbConnection,Instant> borrowed = new ConcurrentHashMap<>();
 
   private JdbConnectionFactory factory;
 
@@ -27,7 +26,7 @@ public class ConnectionPool {
 
   public ConnectionPool(JdbConnectionFactory factory, int poolSize, long leaseTimeInMillis) {
     for (int i = 0; i < poolSize; i++) {
-      pooled.addLast(factory.create());
+      pooled.add(factory.create());
     }
 
     this.factory = factory;
@@ -43,10 +42,10 @@ public class ConnectionPool {
    * @throws ConnectionPoolException Throws if no available connections
    */
 
-  public synchronized JdbConnection borrow() throws ConnectionPoolException {
+  public JdbConnection borrow() throws ConnectionPoolException {
     if (pooled.size() > 0) {
       borrowed.put(pooled.peek(),Instant.now());
-      return pooled.removeFirst();
+      return pooled.remove();
     } else {
       return createReplacementIfExpiredConnFound();
     }
@@ -59,10 +58,10 @@ public class ConnectionPool {
    * @throws ConnectionPoolException Throws if connection has already been returned or forced to expire
    */
 
-  public synchronized void forfeit(JdbConnection jdbConnection) throws ConnectionPoolException {
+  public void forfeit(JdbConnection jdbConnection) throws ConnectionPoolException {
     if (borrowed.containsKey(jdbConnection)) {
       borrowed.remove(jdbConnection);
-      pooled.addLast(jdbConnection);
+      pooled.add(jdbConnection);
     } else {
       throw new ConnectionPoolException("Connection already returned or forced to expire");
     }
