@@ -9,13 +9,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ConnectionPool {
 
-  private ConcurrentLinkedQueue<JdbConnection> pool = new ConcurrentLinkedQueue<>();
+  private final ConcurrentLinkedQueue<JdbConnection> pool = new ConcurrentLinkedQueue<>();
 
-  private Map<JdbConnection,Instant> borrowed = new ConcurrentHashMap<>();
+  private final Map<JdbConnection,Instant> borrowed = new ConcurrentHashMap<>();
 
-  private JdbConnectionFactory factory;
+  private final JdbConnectionFactory factory;
 
-  private long leaseTimeInMillis;
+  private final long leaseTimeInMillis;
 
   /**
    * Creates connection objects and pushes it into queue.
