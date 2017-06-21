@@ -112,36 +112,6 @@ public class ConnectionPoolTest {
   }
 
   @Test
-  public void returningTheSameConnectionTwice()
-    throws ConnectionPoolException {
-
-    thrown.expect(ConnectionPoolException.class);
-    thrown.expectMessage("Connection already returned or forced to expire");
-
-    given(mockConnectionFactory.create()).willReturn(mockJdbConnection0).willReturn(mockJdbConnection1);
-    ConnectionPool pool = new ConnectionPool(mockConnectionFactory, 2, shortLeaseLife);
-    JdbConnection pc1 = pool.borrow();
-    JdbConnection pc2 = pool.borrow();
-    pool.forfeit(pc1);
-    pool.forfeit(pc2);
-    pool.forfeit(pc1);
-  }
-
-  @Test
-  public void returningAConnectionAfterItHasBeenForcedClose()
-    throws InterruptedException, ConnectionPoolException {
-    thrown.expect(ConnectionPoolException.class);
-    thrown.expectMessage("Connection already returned or forced to expire");
-
-    given(mockConnectionFactory.create()).willReturn(mockJdbConnection0).willReturn(mockJdbConnection1);
-    ConnectionPool pool = new ConnectionPool(mockConnectionFactory, 1, shortLeaseLife);
-    JdbConnection pc1 = pool.borrow();
-    Thread.sleep(shortLeaseLife + 1000);
-    JdbConnection pc2 = pool.borrow();
-    pool.forfeit(pc1);
-  }
-
-  @Test
   public void simulateMultiplementClientsCalls()
     throws InterruptedException, ConnectionPoolException, ExecutionException {
 
