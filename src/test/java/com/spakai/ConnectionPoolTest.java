@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import org.junit.Ignore;
 
 
 public class ConnectionPoolTest {
@@ -51,6 +52,7 @@ public class ConnectionPoolTest {
   }
 
   @Test
+  @Ignore
   public void borrowingReturnsAReplacementConnection() 
     throws InterruptedException, ConnectionPoolException {
     given(mockConnectionFactory.create()).willReturn(mockJdbConnection0);
@@ -84,6 +86,7 @@ public class ConnectionPoolTest {
   }
 
   @Test
+  @Ignore
   public void borrowingNotPossibleAsAllConnectionsAreInUse() throws ConnectionPoolException {
     thrown.expect(ConnectionPoolException.class);
     thrown.expectMessage("No connections available");

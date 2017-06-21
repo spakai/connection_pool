@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 
 public class ConnectionPool {
 
@@ -39,25 +40,26 @@ public class ConnectionPool {
    * the current time. This enables us to check the duration it has been out and replace if
    * required.
    * @return JDBConnection This contains the actual jdbc connection object to db.
-   * @throws ConnectionPoolException Throws if no available connections
    */
 
-  public JdbConnection borrow() throws ConnectionPoolException {
-    if (pool.size() > 0) {
-      borrowed.put(pool.peek(),Instant.now());
-      return pool.remove();
-    } else {
-      return createReplacementIfExpiredConnFound();
-    }
+  public JdbConnection borrow() {
+     
+    JdbConnection conn = pool.poll();
+    if ( conn != null) {
+      borrowed.put(conn,Instant.now());  
+      return conn;
+    }    
+    
+    return null;
   }
 
   /**
-   * Return a JdbConnection object back to the pool.
+   * Return a JdbConnection object that was previously borrowed back to the pool.
    *
    * @param jdbConnection The object retrieved from the pool via borrow()
    */
 
-  public void forfeit(JdbConnection jdbConnection) throws ConnectionPoolException {
+  public void forfeit(JdbConnection jdbConnection) {
     if (borrowed.containsKey(jdbConnection)) {
       borrowed.remove(jdbConnection);
       pool.add(jdbConnection);
