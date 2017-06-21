@@ -55,17 +55,13 @@ public class ConnectionPool {
    * Return a JdbConnection object back to the pool.
    *
    * @param jdbConnection The object retrieved from the pool via borrow()
-   * @throws ConnectionPoolException Throws if connection has already been 
-   *        returned or forced to expire
    */
 
   public void forfeit(JdbConnection jdbConnection) throws ConnectionPoolException {
     if (borrowed.containsKey(jdbConnection)) {
       borrowed.remove(jdbConnection);
       pool.add(jdbConnection);
-    } else {
-      throw new ConnectionPoolException("Connection already returned or forced to expire");
-    }
+    } 
   }
 
   private JdbConnection createReplacementIfExpiredConnFound() throws ConnectionPoolException {
