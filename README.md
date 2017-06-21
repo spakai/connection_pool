@@ -1,9 +1,9 @@
-#Motivation
+## Motivation
 
 To learn the basics of Maven or Gradle, jUnit, Mockito and Java 8 by implementing active911's C++ connection pool in Java.
 To understand an interesting implementation of the Strategy and Factory Design Pattern.
 
-#Setup
+## Setup
 Create development environment using Maven by running the following
 ```
 mvn archetype:generate -DgroupId=com.spakai -DartifactId=connection-pool -Dpackage=com.spakai -Dversion=1.0-SNAPSHOT
@@ -21,13 +21,13 @@ Next , run the following to generate a build.gradle file. This uses the maven pl
 gradle init
 ```
 
-#Dependencies
+## Dependencies
 
 - JUnit
 - Hamcrest since I am using assertThat instead of classic assertions
 - Mockito to mock JdbConnectionFactory, JdbConnection and Connection classes
 
-#Code coverage
+## Code coverage
 Code coverage is measured using Jacoco for gradle and Cobertura for maven.
 Current code has 100% coverage.
 
@@ -40,10 +40,10 @@ gradle tasks jacocoTestReport
 maven cobertura:cobertura
 ```
 
-#Code style
+## Code style
 Code style check is done by using checkStyle plugin
 
-#Code design
+## Code design
 
 This project uses Strategy and Factory Design Pattern. This allows ConnectionPool class to be generic. The type of database supported is determined by the type of Factory object that is injected during runtime. The specific factory creates required specific connection class that contains the actual connection to the database. So for example , if you need a MySQL connection pool, pass in a MySQLJDBConnectionFactory object.
 
