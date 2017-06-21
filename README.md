@@ -104,3 +104,6 @@ A client will call borrow() in order to get a connection, and forfeit when retur
 
 
 
+## Code review 
+https://codereview.stackexchange.com/questions/166235/connection-pool-in-java-8-using-strategy-and-factory-pattern
+Recently got this reviewed , good comments given, I am going to look at changing the code. Looking at HikariPool for some ideas too.
