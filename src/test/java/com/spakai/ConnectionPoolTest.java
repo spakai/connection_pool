@@ -150,7 +150,7 @@ public class ConnectionPoolTest {
     .willReturn(mockJdbConnection1)
     .willReturn(mockJdbConnection2)
     .willReturn(mockJdbConnection3)
-      .willReturn(mockJdbConnection4);
+    .willReturn(mockJdbConnection4);
     ConnectionPool pool = new ConnectionPool(mockConnectionFactory, 5, 50000);
 
     List<Future<Integer>> resultList = new ArrayList<>();
@@ -172,7 +172,7 @@ public class ConnectionPoolTest {
       return 0;
     };
 
-    for (int i = 0 ; i < 5000 ; i++) {
+    for (int i = 0 ; i < 15000 ; i++) {
       Future<Integer> result = executor.submit(task);
       resultList.add(result);
     }
@@ -188,6 +188,6 @@ public class ConnectionPoolTest {
 
     executor.shutdown();
 
-    assertThat(total, is(5000));
+    assertThat(total, is(15000));
   }
 }
