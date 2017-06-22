@@ -1,6 +1,7 @@
 package com.spakai;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -20,8 +21,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import org.junit.Ignore;
+
 
 
 public class ConnectionPoolTest {
@@ -35,9 +37,10 @@ public class ConnectionPoolTest {
   
   @Mock private JdbConnectionFactory mockConnectionFactory;
 
-  private final long shortLeaseLife = 1000;
-  private final long longLeaseLife  = 10000;
+
   private final int poolSize        = 5;
+    
+  private ScheduledExecutorService scheduledExecutorService;
 
   @Before
   public void setup() {
@@ -47,71 +50,41 @@ public class ConnectionPoolTest {
   @Test
   public void factoryCreatesConnectionsOnCreation() {
     given(mockConnectionFactory.create()).willReturn(mockJdbConnection0);
-    new ConnectionPool(mockConnectionFactory, poolSize, shortLeaseLife);
+    new ConnectionPool(mockConnectionFactory, poolSize);
     then(mockConnectionFactory).should(times(poolSize)).create();
   }
 
   @Test
-  @Ignore
-  public void borrowingReturnsAReplacementConnection() 
+  public void borrowingReturnsNullAfterTimeout() 
     throws InterruptedException, ConnectionPoolException {
-    given(mockConnectionFactory.create()).willReturn(mockJdbConnection0);
-    ConnectionPool pool = new ConnectionPool(mockConnectionFactory, poolSize, shortLeaseLife);
-
-    //borrow them all but don't return
-    for (int i = 0; i < poolSize; i++) {
-      pool.borrow();
-    }
-
-    //and now let them expire
-    Thread.sleep(shortLeaseLife + 1000);
-    pool.borrow();
-
-    then(mockJdbConnection0).should(times(1)).close();
-    then(mockConnectionFactory).should(times(poolSize + 1)).create();
+	  given(mockConnectionFactory.create())
+	    .willReturn(mockJdbConnection0);
+	  
+    ConnectionPool pool = new ConnectionPool(mockConnectionFactory, 1);
+    pool.borrow(5000L);
+    assertThat(pool.borrow(0L), is(nullValue()));
   }
   
   @Test
-  public void borrowingReturnsTheOldestConnection() 
+  public void borrowingReturnsAConnectionDuringRetry() 
     throws InterruptedException, ConnectionPoolException {
 	  given(mockConnectionFactory.create())
-	    .willReturn(mockJdbConnection0)
-	    .willReturn(mockJdbConnection1)
-	    .willReturn(mockJdbConnection2)
-	    .willReturn(mockJdbConnection3)
-	    .willReturn(mockJdbConnection4);
-    ConnectionPool pool = new ConnectionPool(mockConnectionFactory, poolSize, longLeaseLife);
-
-    assertThat(pool.borrow(), is(mockJdbConnection0));
+	    .willReturn(mockJdbConnection0);
+	  
+    ConnectionPool pool = new ConnectionPool(mockConnectionFactory, 1);
+    pool.borrow(10000L);
+    assertThat(pool.borrow(0L), is(nullValue()));
   }
-
-  @Test
-  @Ignore
-  public void borrowingNotPossibleAsAllConnectionsAreInUse() throws ConnectionPoolException {
-    thrown.expect(ConnectionPoolException.class);
-    thrown.expectMessage("No connections available");
-
-    given(mockConnectionFactory.create()).willReturn(mockJdbConnection0);
-    ConnectionPool pool = new ConnectionPool(mockConnectionFactory, poolSize, longLeaseLife);
-
-    //borrow them all but don't return
-    for (int i = 0; i < poolSize; i++) {
-      pool.borrow();
-    }
-
-    //borrow again before the others expire
-    pool.borrow();
-  }
-
+  
   @Test
   public void returningAConnection() throws InterruptedException, ConnectionPoolException {
     given(mockConnectionFactory.create()).willReturn(mockJdbConnection0);
-    ConnectionPool pool = new ConnectionPool(mockConnectionFactory, poolSize, shortLeaseLife);
+    ConnectionPool pool = new ConnectionPool(mockConnectionFactory, poolSize);
 
-    JdbConnection pc1 = pool.borrow();
+    JdbConnection pc1 = pool.borrow(0L);
     pool.forfeit(pc1);
 
-    assertThat(pool.borrow(), is(mockJdbConnection0));
+    assertThat(pool.borrow(0L), is(mockJdbConnection0));
   }
 
   @Test
@@ -124,23 +97,21 @@ public class ConnectionPoolTest {
     .willReturn(mockJdbConnection2)
     .willReturn(mockJdbConnection3)
     .willReturn(mockJdbConnection4);
-    ConnectionPool pool = new ConnectionPool(mockConnectionFactory, 5, 50000);
+    ConnectionPool pool = new ConnectionPool(mockConnectionFactory, 5);
 
     List<Future<Integer>> resultList = new ArrayList<>();
     ExecutorService executor = Executors.newFixedThreadPool(3000);
 
     Callable<Integer> task = () -> {
       try {
-        JdbConnection connection = pool.borrow();
+        JdbConnection connection = pool.borrow(0L);
         TimeUnit.SECONDS.sleep((long) (Math.random() * 2));
-        pool.forfeit(connection);
+        if( connection != null) {
+            pool.forfeit(connection);
+        }
         return 1;
       } catch (Exception e) {
-        if (e.getMessage() == "No connections available") {
-          return 1;
-        } else {
           e.printStackTrace();
-        }
       }
       return 0;
     };
